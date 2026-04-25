@@ -11,15 +11,15 @@ pub struct Scuver {
 
 impl Scuver {
     /// Creates a new runner with a default seeded database.
-    pub fn new() -> Self {
+    pub fn new(db: DB) -> Self {
         Self {
-            db: Mutex::new(DB::new("default", String::new())),
+            db: Mutex::new(db),
         }
     }
 
     /// Executes a single command string.
     ///
-    /// Supported commands are `SET <key> <value>`, `ADD <key> <value>`, and
+    /// Supported commands are `SET <key> <value>` and
     /// `GET <key>`.
     pub fn run(&self, code: String) -> Result<String, Box<dyn Error>> {
         let command: Vec<&str> = code.trim().split_whitespace().collect();
@@ -35,12 +35,7 @@ impl Scuver {
                     db.set(command[1], command[2].to_string());
                 }
             }
-            "ADD" => {
-                if ensure_arg(ArgType::Add, command.len()) {
-                    let mut db = self.db.lock().unwrap();
-                    db.add_row(command[1], command[2].to_string());
-                }
-            }
+
             "GET" => {
                 if ensure_arg(ArgType::Get, command.len()) {
                     let db = self.db.lock().unwrap();
@@ -58,7 +53,7 @@ impl Scuver {
 
 enum ArgType {
     Set,
-    Add,
+
     Get,
 }
 
@@ -70,12 +65,7 @@ fn ensure_arg(argtype: ArgType, command_len: usize) -> bool {
                 return false;
             }
         }
-        ArgType::Add => {
-            if command_len != 3 {
-                eprintln!("kelpdb: ADD requires 2 arguments (key value)");
-                return false;
-            }
-        }
+
         ArgType::Get => {
             if command_len != 2 {
                 eprintln!("kelpdb: GET requires 1 argument (key)");
@@ -105,12 +95,7 @@ mod tests {
         assert_eq!(result, "value");
     }
 
-    #[test]
-    fn test_run_add() {
-        let scuver = Scuver::new();
-        let result = scuver.run("ADD new_key initial_value".to_string());
-        assert!(result.is_ok());
-    }
+
 
     #[test]
     fn test_run_empty_code() {
@@ -130,8 +115,8 @@ mod tests {
     fn test_run_get_after_multiple_adds() {
         let scuver = Scuver::new();
 
-        scuver.run("ADD posts first".to_string()).unwrap();
-        scuver.run("ADD posts second".to_string()).unwrap();
+        scuver.run("SET posts first".to_string()).unwrap();
+        scuver.run("SET posts second".to_string()).unwrap();
 
         let result = scuver.run("GET posts".to_string()).unwrap();
         assert_eq!(result, "first\nsecond");

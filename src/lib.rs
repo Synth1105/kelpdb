@@ -5,6 +5,6 @@
 
 pub mod db;
 pub mod prelude;
-#[cfg(feature = "scuver")]
+
 pub mod scuver;
 pub mod utils;

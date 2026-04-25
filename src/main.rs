@@ -1,73 +1,33 @@
-use kelpdb::prelude::*;
+use kelpdb::prelude::DB;
+use kelpdb::scuver::Scuver;
 use rusty_repl::*;
 use std::error::Error;
 use std::sync::{Mutex, OnceLock};
 
-static GLOBAL_DB: OnceLock<Mutex<DB>> = OnceLock::new();
-
-enum ArgType {
-    Set,
-
-    Get,
-}
-
-fn ensure_arg(argtype: ArgType, command_len: usize) -> bool {
-    match argtype {
-        ArgType::Set => {
-            if command_len != 3 {
-                eprintln!("kelpdb: SET requires 2 arguments (key value)");
-                return false;
-            }
-        }
-
-        ArgType::Get => {
-            if command_len != 2 {
-                eprintln!("kelpdb: GET requires 1 argument (key)");
-                return false;
-            }
-        }
-    }
-    true
-}
-
-fn process(orig_command: String, db_mutex: &Mutex<DB>) {
-    let command: Vec<&str> = orig_command.trim().split_whitespace().collect();
-
-    if command.is_empty() {
-        return;
-    }
-
-    match command[0] {
-        "SET" => {
-            if ensure_arg(ArgType::Set, command.len()) {
-                let mut db = db_mutex.lock().unwrap();
-                db.set(command[1], command[2].to_string());
-            }
-        }
-
-        "GET" => {
-            if ensure_arg(ArgType::Get, command.len()) {
-                let db = db_mutex.lock().unwrap();
-                let result = db.get_display(command[1]);
-                println!("{:#?}", result);
-            }
-        }
-        _ => {
-            eprintln!("kelpdb: command not found");
-        }
-    }
-}
+static GLOBAL_RUNNER: OnceLock<Mutex<Scuver>> = OnceLock::new();
 
 fn input_handler(cmd: String) -> bool {
-    let db_mutex =
-        GLOBAL_DB.get_or_init(|| Mutex::new(DB::new("example", String::from("Hello, World!"))));
-
     match cmd.trim() {
-        ":exit" | ":quit" => return true,
-        val => process(val.to_string(), db_mutex),
-    }
+        ":exit" | ":quit" => true,
+        val => {
+            let runner = GLOBAL_RUNNER.get_or_init(|| {
+                let db = DB::new("__example__", String::from("Hello, KelpDB"));
+                Mutex::new(Scuver::new(db))
+            });
+            let runner = runner.lock().unwrap();
 
-    false
+            match runner.run(val.to_string()) {
+                Ok(output) => {
+                    if !output.is_empty() {
+                        println!("{output}");
+                    }
+                }
+                Err(err) => eprintln!("kelpdb: {err}"),
+            }
+
+            false
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
