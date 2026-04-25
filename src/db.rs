@@ -6,6 +6,7 @@ use crate::utils::Row;
 
 agent!(Vec<Row>);
 
+#[derive(Clone)]
 pub struct DB {
     handle: ketheler::server::ServerHandle<Agent>
 }

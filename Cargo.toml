@@ -1,9 +1,10 @@
 [package]
 name = "kelpdb"
 description = "In-memory DMBS that store datas in thread."
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 license = "GPL-3.0-only"
 
 [dependencies]
 ketheler = { version = "1.0.1", features = ["agent"] }
+rusty_repl = "0.3.0"
