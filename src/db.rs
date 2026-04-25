@@ -18,7 +18,7 @@ impl DB {
     pub fn new(name: impl Into<String>, initial: impl WriteValue) -> Self {
         let handle = Agent::start_link();
         let mut db = Self { handle };
-        db.add_row(name, initial);
+        db.set(name, initial);
         db
     }
 
@@ -79,18 +79,7 @@ impl DB {
             .collect()
     }
 
-    /// Adds a new row with an initial value, or appends to an existing row.
-    pub fn add_row(&mut self, name: impl Into<String>, initial: impl WriteValue) {
-        let name = name.into();
-        Agent::get_and_update(&self.handle, move |mut rows| {
-            if let Some(row) = rows.iter_mut().find(|row| row.name == name) {
-                row.data.push(initial.write());
-            } else {
-                rows.push(Row::init(name, initial));
-            }
-            rows
-        });
-    }
+
 
     /// Removes and returns the entire row by name.
     pub fn remove_row(&mut self, name: impl Into<String>) -> Option<Row> {

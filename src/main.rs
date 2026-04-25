@@ -7,7 +7,7 @@ static GLOBAL_DB: OnceLock<Mutex<DB>> = OnceLock::new();
 
 enum ArgType {
     Set,
-    Add,
+
     Get,
 }
 
@@ -19,12 +19,7 @@ fn ensure_arg(argtype: ArgType, command_len: usize) -> bool {
                 return false;
             }
         }
-        ArgType::Add => {
-            if command_len != 3 {
-                eprintln!("kelpdb: ADD requires 2 arguments (key value)");
-                return false;
-            }
-        }
+
         ArgType::Get => {
             if command_len != 2 {
                 eprintln!("kelpdb: GET requires 1 argument (key)");
@@ -49,12 +44,7 @@ fn process(orig_command: String, db_mutex: &Mutex<DB>) {
                 db.set(command[1], command[2].to_string());
             }
         }
-        "ADD" => {
-            if ensure_arg(ArgType::Add, command.len()) {
-                let mut db = db_mutex.lock().unwrap();
-                db.add_row(command[1], command[2].to_string());
-            }
-        }
+
         "GET" => {
             if ensure_arg(ArgType::Get, command.len()) {
                 let db = db_mutex.lock().unwrap();
@@ -82,7 +72,7 @@ fn input_handler(cmd: String) -> bool {
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("KelpDB REPL");
-    let ks = KeywordStyle::new(vec!["GET", "SET", "ADD", ":exit", ":quit"], Color::Cyan);
+    let ks = KeywordStyle::new(vec!["GET", "SET", ":exit", ":quit"], Color::Cyan);
 
     let default_prompt = CleanPrompt::from(
         DefaultPromptSegment::Basic("KelpDB ❯ ".to_string()),

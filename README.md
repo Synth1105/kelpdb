@@ -28,8 +28,8 @@ fn main() {
 
     db.set("user", 25i32);
     db.set("user", 180.5f64);
-    db.add_row("posts", "hello");
-    db.add_row("posts", "world");
+    db.set("posts", "hello");
+    db.set("posts", "world");
 
     assert_eq!(db.get_by_type::<String>("user"), vec![String::from("John")]);
     assert_eq!(db.get_by_type::<i32>("user"), vec![25]);
@@ -67,14 +67,14 @@ cargo run
 Supported commands:
 
 - `SET <key> <value>`
-- `ADD <key> <value>`
+
 - `GET <key>`
 - `:exit`
 - `:quit`
 
 ## Scuver
 
-The optional `scuver` feature exposes a minimal command runner:
+The optional `scuver` feature exposes a minimal SQL-like language runner:
 
 ```rust
 use kelpdb::scuver::Scuver;
@@ -83,7 +83,7 @@ fn main() {
     let scuver = Scuver::new();
 
     scuver.run("SET user John".into()).unwrap();
-    scuver.run("ADD user 25".into()).unwrap();
+    scuver.run("SET user 25".into()).unwrap();
 
     let output = scuver.run("GET user".into()).unwrap();
     assert_eq!(output, "John\n25");
