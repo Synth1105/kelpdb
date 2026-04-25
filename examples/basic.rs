@@ -1,4 +1,4 @@
-use kelpdb::DB;
+use kelpdb::prelude::*;
 
 fn main() {
     let mut db = DB::new("user", String::from("John"));
