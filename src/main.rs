@@ -32,7 +32,7 @@ fn input_handler(cmd: String) -> bool {
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("KelpDB REPL");
-    let ks = KeywordStyle::new(vec!["GET", "SET", ":exit", ":quit"], Color::Cyan);
+    let ks = KeywordStyle::new(vec!["GET", "SET", "RM", ":exit", ":quit"], Color::Cyan);
 
     let default_prompt = CleanPrompt::from(
         DefaultPromptSegment::Basic("KelpDB ❯ ".to_string()),

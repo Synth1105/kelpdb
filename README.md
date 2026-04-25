@@ -13,9 +13,9 @@ handles share the same row storage.
 
 ## Installation
 
-```toml
-[dependencies]
-kelpdb = "1.2.0"
+```bash
+cargo add kelpdb # or...
+cargo install kelpdb
 ```
 
 ## Basic Usage
@@ -82,7 +82,7 @@ use kelpdb::scuver::Scuver;
 fn main() {
     let scuver = Scuver::new();
 
-    scuver.run("SET user John".into()).unwrap();
+    scuver.run("SET user \"John\"".into()).unwrap();
     scuver.run("SET user 25".into()).unwrap();
 
     let output = scuver.run("GET user".into()).unwrap();

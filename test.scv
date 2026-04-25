@@ -1,0 +1,2 @@
+SET test "Hello, World!"
+GET test

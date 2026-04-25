@@ -2,6 +2,8 @@
 
 use crate::db::DB;
 use std::error::Error;
+use std::fs;
+use std::path::Path;
 use std::sync::Mutex;
 
 /// Stateful command runner for `SET` and `GET`.
@@ -13,6 +15,27 @@ impl Scuver {
     /// Creates a new runner from an existing database handle.
     pub fn new(db: DB) -> Self {
         Self { db: Mutex::new(db) }
+    }
+
+    /// Executes scuver code from file.
+    pub fn load(file: &str) -> Result<String, Box<dyn Error>> {
+        if Path::new(file).extension().and_then(|ext| ext.to_str()) != Some("scv") {
+            Err("file ext should be scv")?
+        }
+
+        let filecontent = fs::read_to_string(file)?;
+        let runner = Self::new(DB::new("__main__", true));
+        let mut result = String::new();
+
+        for line in filecontent
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+        {
+            result.push_str(&runner.run(line.to_string())?);
+        }
+
+        Ok(result)
     }
 
     /// Executes a single command string.
@@ -33,6 +56,11 @@ impl Scuver {
                 let db = self.db.lock().unwrap();
                 Ok(db.get_display(key).join("\n"))
             }
+            Command::Rm { key } => {
+                let mut db = self.db.lock().unwrap();
+                db.remove(key);
+                Ok(String::new())
+            }
         }
     }
 }
@@ -40,6 +68,7 @@ impl Scuver {
 enum Command {
     Set { key: String, value: ParsedValue },
     Get { key: String },
+    Rm  { key: String },
 }
 
 enum ParsedValue {
@@ -78,6 +107,16 @@ fn parse_command(input: &str) -> Result<Command, Box<dyn Error>> {
             Ok(Command::Get {
                 key: key.to_string(),
             })
+        }
+        "RM" => {
+            let (key, rest) = take_token(rest).ok_or("RM requires 1 arguments (key)")?;
+            if !rest.trim().is_empty() {
+                return Err("RM requires 1 argument (key)".into());
+            }
+            Ok(Command::Rm {
+                key: key.to_string(),
+            }) 
+
         }
         _ => Err("command not found".into()),
     }
@@ -271,5 +310,12 @@ mod tests {
 
         let result = scuver.run("SET only_key".to_string());
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn executes_from_file() {
+        let scuver = Scuver::load("test.scv");
+        println!("{:#?}", scuver);
+        assert_eq!(scuver.is_ok(), true);
     }
 }
