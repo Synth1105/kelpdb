@@ -79,8 +79,6 @@ impl DB {
             .collect()
     }
 
-
-
     /// Removes and returns the entire row by name.
     pub fn remove_row(&mut self, name: impl Into<String>) -> Option<Row> {
         let key = name.into();
@@ -222,15 +220,6 @@ mod tests {
     }
 
     #[test]
-    fn add_row_appends_to_existing_row() {
-        let mut db = DB::new("posts", "first");
-
-        db.add_row("posts", "second");
-
-        assert_eq!(db.get_display("posts"), vec!["first", "second"]);
-    }
-
-    #[test]
     fn get_returns_empty_for_missing_row() {
         let db = DB::new("user", "John");
 
@@ -248,7 +237,7 @@ mod tests {
     fn remove_row_preserves_row_shape() {
         let mut db = DB::new("posts", "first");
 
-        db.add_row("posts", "second");
+        db.set("posts", "second");
         let removed = db.remove_row("posts").unwrap();
 
         assert_eq!(
@@ -259,6 +248,15 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec!["first", "second"]
         );
+    }
+
+    #[test]
+    fn set_appends_to_existing_row() {
+        let mut db = DB::new("posts", "first");
+
+        db.set("posts", "second");
+
+        assert_eq!(db.get_display("posts"), vec!["first", "second"]);
     }
 
     #[test]

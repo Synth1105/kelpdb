@@ -6,8 +6,7 @@ fn main() {
     db.set("user", 25i32);
     db.set("user", 180.5f64);
 
-    db.add_row("posts", String::from("asdf"));
-
+    db.set("posts", String::from("asdf"));
     db.set("posts", String::from("sdfsdf"));
 
     println!("Posts: {:#?}", db.get_display("posts"));
